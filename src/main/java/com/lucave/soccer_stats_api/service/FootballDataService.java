@@ -11,11 +11,11 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class FootballDataService {
-    
+
     private final WebClient webClient;
 
     public FootballDataService(@Value("${football.api.url}") String baseUrl,
-                               @Value("${football.api.key}") String apiKey) {
+            @Value("${football.api.key}") String apiKey) {
 
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
@@ -23,20 +23,21 @@ public class FootballDataService {
                 .build();
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> getPremierLeagueTeams() {
         try {
-            Mono<Map> response = webClient.get()
+            Mono<Map<String, Object>> response = webClient.get()
                     .uri("/competitions/PL/teams")
                     .retrieve()
-                    .bodyToMono(Map.class);
-            
-            Map<String, Object> data = (Map<String, Object>) response.block();
+                    .bodyToMono(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {
+                    });
 
+            Map<String, Object> data = response.block();
+
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> teams = (List<Map<String, Object>>) data.get("teams");
 
             List<String> teamNames = new ArrayList<>();
-            for(Map<String, Object> teamEntry: teams) {
+            for (Map<String, Object> teamEntry : teams) {
                 teamNames.add((String) teamEntry.get("name"));
             }
 
